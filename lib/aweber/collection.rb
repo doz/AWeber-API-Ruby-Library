@@ -16,7 +16,7 @@ module AWeber
   #    lists.find_by_name("testlist")
   #    #=> #<AWeber::Resources::List @id=123, @name="testlist" ...>
   #
-  # +find_by_*+ methods will also return a Hash of entries if more than 
+  # +find_by_*+ methods will also return a Hash of entries if more than
   # one matches the criteria. The hash will be keyed by resource ID.
   #
   #    messages.find_by_total_opens(0)
@@ -58,24 +58,24 @@ module AWeber
 
       self.class.new(client, @klass, response)
     end
-    
+
     def create(attrs={})
       params   = attrs.merge("ws.op" => "create")
       response = client.post(path, params)
-      
+
       return false unless response.is_a? Net::HTTPCreated
-      
+
       response = JSON.parse(response.body)
       resource = get(response["location"]).merge(:parent => self)
       resource = @klass.new(client, resource)
-      
+
       self[resource.id] = resource
     end
 
     def [](id)
       @entries[id] ||= fetch_entry(id)
     end
-    
+
     def []=(key, resource)
       @entries[key] = resource
     end
@@ -87,7 +87,7 @@ module AWeber
     def inspect
       "#<AW::Collection(#{@klass.to_s}) size=\"#{size}\">"
     end
-    
+
     def path
       parent and parent.path.to_s + @klass.path.to_s or @klass.path.to_s
     end
@@ -109,13 +109,13 @@ module AWeber
       @klass.new(client, get(path).merge(:parent => self))
     end
 
-    def fetch_next_group(amount=20)
+    def fetch_next_group(amount=100)
       path = "#{ base_path }?ws.start=#{ @_entries.size }&ws.size=#{ amount }"
       self.class.new(client, @klass, get(path)).entries.to_a
     end
 
     def needs_next_group?(current_index)
-      current_index == @_entries.size && current_index != @total_size
+      current_index >= @_entries.size && current_index < @total_size
     end
 
     def base_path
@@ -134,7 +134,7 @@ module AWeber
       end
       super
     end
-    
+
     def h(str)
       CGI.escape(str.to_s)
     end
